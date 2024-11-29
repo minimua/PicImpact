@@ -82,15 +82,15 @@ export default function FileUpload() {
       // 处理 f_number
       if (tags?.FNumber?.value) {
         const values = tags.FNumber.value as [number, number];
-        exifObj.f_number = (values[0] / values[1]).toFixed(1);
-    }
+        exifObj.f_number = `f/${(values[0] / values[1]).toFixed(1)}`;
+      }
       exifObj.exposure_program = tags?.ExposureProgram?.description
       exifObj.iso_speed_rating = tags?.ISOSpeedRatings?.description
       // 处理 focal_length
       if (tags?.FocalLength?.value) {
         const values = tags.FocalLength.value as [number, number];
-        exifObj.focal_length = (values[0] / values[1]).toFixed(1);
-    }
+        exifObj.focal_length = `${(values[0] / values[1]).toFixed(1)}mm`;
+      }
       exifObj.lens_specification = tags?.LensSpecification?.description
       exifObj.lens_model = tags?.LensModel?.description
       exifObj.exposure_mode = tags?.ExposureMode?.description
