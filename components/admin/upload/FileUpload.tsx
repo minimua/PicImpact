@@ -79,10 +79,18 @@ export default function FileUpload() {
       exifObj.bits = tags?.['Bits Per Sample']?.description
       exifObj.data_time = tags?.DateTimeOriginal?.description !== '' ? tags?.DateTimeOriginal?.description : tags?.DateTime?.description;
       exifObj.exposure_time = tags?.ExposureTime?.description
-      exifObj.f_number = tags?.FNumber?.description
+      // 处理 f_number
+      if (tags?.FNumber?.value) {
+        const values = tags.FNumber.value as [number, number];
+        exifObj.f_number = (values[0] / values[1]).toFixed(1);
+    }
       exifObj.exposure_program = tags?.ExposureProgram?.description
       exifObj.iso_speed_rating = tags?.ISOSpeedRatings?.description
-      exifObj.focal_length = tags?.FocalLength?.description
+      // 处理 focal_length
+      if (tags?.FocalLength?.value) {
+        const values = tags.FocalLength.value as [number, number];
+        exifObj.focal_length = (values[0] / values[1]).toFixed(1);
+    }
       exifObj.lens_specification = tags?.LensSpecification?.description
       exifObj.lens_model = tags?.LensModel?.description
       exifObj.exposure_mode = tags?.ExposureMode?.description
