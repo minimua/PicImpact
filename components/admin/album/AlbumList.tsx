@@ -25,6 +25,7 @@ import {
 } from '~/components/ui/dialog'
 import { SquarePenIcon } from '~/components/icons/square-pen'
 import { DeleteIcon } from '~/components/icons/delete'
+import { useTranslations } from 'next-intl'
 
 export default function AlbumList(props : Readonly<HandleProps>) {
   const { data, isLoading, error, mutate } = useSWRHydrated(props)
@@ -35,14 +36,11 @@ export default function AlbumList(props : Readonly<HandleProps>) {
   const { setAlbumEdit, setAlbumEditData } = useButtonStore(
     (state) => state,
   )
+  const t = useTranslations()
 
   async function deleteAlbum() {
     setDeleteLoading(true)
     if (!album.id) return
-    if (album.album_value === '/') {
-      toast.warning('/ 路由不允许被删除！')
-      return
-    }
     try {
       const res = await fetch(`/api/v1/albums/delete/${album.id}`, {
         method: 'DELETE',
@@ -61,10 +59,6 @@ export default function AlbumList(props : Readonly<HandleProps>) {
   }
 
   async function updateAlbumShow(id: string, album_value: string, show: number) {
-    if (album_value === '/' && show === 1) {
-      toast.warning('/ 路由不允许设置为不显示！')
-      return
-    }
     try {
       setUpdateAlbumId(id)
       setUpdateAlbumLoading(true)
@@ -101,18 +95,18 @@ export default function AlbumList(props : Readonly<HandleProps>) {
             <Popover>
               <PopoverTrigger
                 className="cursor-pointer select-none inline-flex items-center justify-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-emerald-700">
-                <p className="whitespace-nowrap text-sm" aria-label="路由">{album.album_value}</p>
+                <p className="whitespace-nowrap text-sm" aria-label={t('Album.router')}>{album.album_value}</p>
               </PopoverTrigger>
               <PopoverContent>
                 <div className="px-1 py-2 select-none">
-                  <div className="text-small font-bold">路由</div>
-                  <div className="text-tiny">可以访问的一级路径</div>
+                  <div className="text-small font-bold">{t('Album.router')}</div>
+                  <div className="text-tiny">{t('Album.routerDetail')}</div>
                 </div>
               </PopoverContent>
             </Popover>
           </div>
           <div className="flex justify-start w-full p-2 h-48">
-            {album.detail || '没有介绍'}
+            {album.detail || t('Album.noTips')}
           </div>
           <CardFooter className="flex h-12 p-2 mb-1 space-x-1 select-none before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 before:rounded-xl rounded-large w-[calc(100%_-_8px)] shadow-small z-10">
             <div className="flex flex-1 space-x-1 items-center">
@@ -124,17 +118,9 @@ export default function AlbumList(props : Readonly<HandleProps>) {
                     onCheckedChange={(isSelected: boolean) => updateAlbumShow(album.id, album.album_value, isSelected ? 0 : 1)}
                   />
               }
-              <Popover>
-                <PopoverTrigger className="cursor-pointer select-none inline-flex items-center justify-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-emerald-700">
-                  <div className="flex space-x-2 items-center justify-center text-sm"><ArrowDown10 size={20}/>{album.sort}</div>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <div className="px-1 py-2 select-none">
-                    <div className="text-small font-bold">排序</div>
-                    <div className="text-tiny">首页优先级最高</div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <div className="flex space-x-2 items-center justify-center text-sm select-none rounded-full bg-emerald-100 px-2.5 py-0.5 text-emerald-700">
+                <ArrowDown10 size={20}/>{album.sort}
+              </div>
             </div>
             <div className="space-x-1">
               <Button
@@ -144,51 +130,48 @@ export default function AlbumList(props : Readonly<HandleProps>) {
                   setAlbumEditData(album)
                   setAlbumEdit(true)
                 }}
-                aria-label="编辑相册"
+                aria-label={t('Album.editAlbum')}
               >
                 <SquarePenIcon />
               </Button>
-              {
-                album.album_value !== '/' &&
-                <Dialog onOpenChange={(value) => {
-                  if (!value) {
-                    setAlbum({} as AlbumType)
-                  }
-                }}>
-                  <DialogTrigger asChild>
+              <Dialog onOpenChange={(value) => {
+                if (!value) {
+                  setAlbum({} as AlbumType)
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setAlbum(album)
+                    }}
+                    aria-label={t('Album.deleteAlbum')}
+                  >
+                    <DeleteIcon />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>{t('Tips.reallyDelete')}</DialogTitle>
+                  </DialogHeader>
+                  <div>
+                    <p>{t('Album.albumId')}：{album.id}</p>
+                    <p>{t('Album.albumName')}：{album.name}</p>
+                    <p>{t('Album.albumRouter')}：{album.album_value}</p>
+                  </div>
+                  <DialogFooter>
                     <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        setAlbum(album)
-                      }}
-                      aria-label="删除相册"
+                      disabled={deleteLoading}
+                      onClick={() => deleteAlbum()}
+                      aria-label={t('Button.yesDelete')}
                     >
-                      <DeleteIcon />
+                      {deleteLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin"/>}
+                      {t('Button.delete')}
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>确定要删掉？</DialogTitle>
-                    </DialogHeader>
-                    <div>
-                      <p>相册 ID：{album.id}</p>
-                      <p>相册名称：{album.name}</p>
-                      <p>相册路由：{album.album_value}</p>
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        disabled={deleteLoading}
-                        onClick={() => deleteAlbum()}
-                        aria-label="确认删除"
-                      >
-                        {deleteLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin"/>}
-                        删除
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              }
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardFooter>
         </Card>

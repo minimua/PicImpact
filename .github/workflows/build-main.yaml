@@ -2,12 +2,12 @@ name: Dev Docker Multi-arch Image CI & CD
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build:
-    name: Running Compile Next Multi-arch Docker Image
+    name: Running Compile Next Multi-arch Docker Main Image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PicImpact

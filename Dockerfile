@@ -1,4 +1,4 @@
-FROM node:20.18-alpine3.19 AS base
+FROM node:20.18-alpine3.20 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,7 +9,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* .npmrc ./
 
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN npm install -g corepack@latest && corepack enable pnpm && pnpm i --frozen-lockfile
 
 FROM base AS runner-base
 
@@ -17,7 +17,7 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-RUN corepack enable pnpm && pnpm add prisma @prisma/client
+RUN npm install -g corepack@latest && corepack enable pnpm && pnpm add prisma@5.22.0 @prisma/client@5.22.0
 
 FROM base AS builder
 
@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN AUTH_SECRET=pic-impact export NODE_OPTIONS=--openssl-legacy-provider && corepack enable pnpm && pnpm run prisma:generate && pnpm run build
+RUN AUTH_SECRET=pic-impact export NODE_OPTIONS=--openssl-legacy-provider && npm install -g corepack@latest && corepack enable pnpm && pnpm run prisma:generate && pnpm run build
 
 FROM base AS runner
 
@@ -37,7 +37,7 @@ ENV NODE_ENV production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=runner-base /app/node_modules ./node_modules
+COPY --from=runner-base --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
 COPY ./prisma ./prisma
 COPY ./script.sh ./script.sh

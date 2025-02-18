@@ -26,12 +26,16 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { useButtonStore } from '~/app/providers/button-store-Providers.tsx'
 import LoginHelpSheet from '~/components/login/LoginHelpSheet.tsx'
+import { useTranslations } from 'next-intl'
+import { signIn } from 'next-auth/react'
+import { validate2FA } from '~/server/actions'
 
 export const UserFrom = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) => {
   const router = useRouter()
+  const t = useTranslations()
 
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -59,17 +63,62 @@ export const UserFrom = ({
     return parsedCredentials;
   }
 
+  const handleLogin = async () => {
+    setIsLoading(true)
+
+    try {
+      const parsedCredentials = zHandle()
+      if (!parsedCredentials.success) {
+        toast.error('请检查您的账号密码格式！')
+        return
+      }
+
+      const { email, password } = parsedCredentials.data
+
+      // 首先验证2FA (如果启用的话)
+      if (data?.data?.auth_enable === 'true') {
+        const is2FAValid = await validate2FA(token)
+        if (!is2FAValid) {
+          toast.error('双因素口令验证失败！')
+          return
+        }
+      }
+
+      // 进行实际的登录
+      const result = await signIn('Credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        toast.error('账号或密码错误！')
+        return
+      }
+
+      toast.success('登录成功！')
+      setTimeout(() => {
+        location.replace('/admin')
+      }, 1000)
+    } catch (e) {
+      console.error(e)
+      toast.error('登录过程中出现错误，请稍后重试')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl select-none">欢迎登录</CardTitle>
+          <CardTitle className="text-xl select-none">{t('Login.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
             <div className="grid gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email" className="select-none">邮箱</Label>
+                <Label htmlFor="email" className="select-none">{t('Login.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -81,12 +130,12 @@ export const UserFrom = ({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password" className="select-none">密码</Label>
+                  <Label htmlFor="password" className="select-none">{t('Login.password')}</Label>
                   <div
                     onClick={() => setLoginHelp(true)}
                     className="ml-auto text-sm underline-offset-4 hover:underline select-none cursor-pointer"
                   >
-                    忘记密码了吗?
+                    {t('Login.forget')}
                   </div>
                 </div>
                 <Input
@@ -101,7 +150,7 @@ export const UserFrom = ({
                 data?.data?.auth_enable === 'true' &&
                   <div className="grid gap-2">
                     <div className="flex items-center select-none">
-                      <div>双因素口令</div>
+                      <div>{t('Login.otp')}</div>
                     </div>
                     <div className="mx-auto">
                       <InputOTP
@@ -130,38 +179,17 @@ export const UserFrom = ({
                 type="submit"
                 className="w-full select-none"
                 disabled={(data?.data?.auth_enable === 'true' && token.length !== 6) || email.length === 0 || password.length < 6}
-                onClick={async () => {
-                  setIsLoading(true)
-
-                  try {
-                    const parsedCredentials = zHandle()
-                    if (parsedCredentials.success) {
-                      const {email, password} = parsedCredentials.data;
-                      await authenticate(email, password, token)
-                      toast.success('登录成功！')
-                      setTimeout(() => {
-                        location.replace('/admin')
-                      }, 1000);
-                    } else {
-                      toast.error('请检查您的账号密码！')
-                    }
-                  } catch (e) {
-                    console.log(e)
-                    toast.error(e?.message)
-                  } finally {
-                    setIsLoading(false)
-                  }
-                }}
-                aria-label="登录"
+                onClick={handleLogin}
+                aria-label={t('Login.login')}
               >
-                {isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin"/>} 登录
+                {isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin"/>}{t('Login.login')}
               </Button>
               <Button
                 className="w-full select-none"
                 onClick={() => router.push('/')}
-                aria-label="返回首页"
+                aria-label={t('Login.goHome')}
               >
-                返回首页
+                {t('Login.goHome')}
               </Button>
             </div>
           </div>

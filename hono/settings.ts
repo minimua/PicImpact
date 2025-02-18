@@ -1,7 +1,7 @@
 import 'server-only'
 import { fetchConfigsByKeys, fetchSecretKey, fetchUserById } from '~/server/db/query'
 import { Config } from '~/types'
-import { updateAListConfig, updateCustomInfo, updatePassword, updateR2Config, updateS3Config } from '~/server/db/operate'
+import { updateAListConfig, updateCustomInfo, updatePassword, updateR2Config, updateS3Config,updateUserInfo } from '~/server/db/operate'
 import { auth } from '~/server/auth'
 import CryptoJS from 'crypto-js'
 import { Hono } from 'hono'
@@ -15,6 +15,7 @@ app.get('/get-custom-info', async (c) => {
     'custom_author',
     'rss_feed_id',
     'rss_user_id',
+    'custom_index_style',
     'preview_max_width_limit',
     'preview_max_width_limit_switch',
     'preview_quality',
@@ -34,6 +35,17 @@ app.get('/r2-info', async (c) => {
   return c.json(data)
 })
 
+app.get("/get-user-info", async (c) => {
+  const { user } = await auth()
+  const data = await fetchUserById(user?.id);
+  
+  return c.json({
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    image: data.image
+  })
+})
 app.get('/s3-info', async (c) => {
   const data = await fetchConfigsByKeys([
     'accesskey_id',
@@ -97,6 +109,7 @@ app.put('/update-custom-info', async (c) => {
     customAuthor: string
     feedId: string
     userId: string
+    customIndexStyle: number
     enablePreviewImageMaxWidthLimit: boolean
     previewImageMaxWidth: number
     previewQuality: number
@@ -105,12 +118,12 @@ app.put('/update-custom-info', async (c) => {
     await updateCustomInfo(query);
     return c.json({
       code: 200,
-      message: '更新成功！'
+      message: 'Success'
     })
   } catch (e) {
     return Response.json({
       code: 500,
-      message: '更新失败！'
+      message: 'Failed'
     })
   }
 })
@@ -123,7 +136,7 @@ app.put('/update-password', async (c) => {
   if (!secretKey || !secretKey.config_value) {
     return Response.json({
       code: 500,
-      message: '更新失败！'
+      message: 'Failed'
     })
   }
   const hashedOldPassword = CryptoJS.HmacSHA512(pwd.oldPassword, secretKey?.config_value).toString()
@@ -134,19 +147,48 @@ app.put('/update-password', async (c) => {
       await updatePassword(user?.id, hashedNewPassword);
       return c.json({
         code: 200,
-        message: '更新成功！'
+        message: 'Success'
       })
     } else {
       return c.json({
         code: 500,
-        message: '旧密码不匹配！'
+        message: 'Old password does not match'
       })
     }
   } catch (e) {
     console.log(e)
     return c.json({
       code: 500,
-      message: '更新失败！'
+      message: 'Failed'
+    })
+  }
+})
+
+app.put('/update-user-info', async (c) => {
+  const { user } = await auth()
+  const { name, email, avatar } = await c.req.json() 
+  try {
+    const updates: {
+      name?: string,
+      email?: string,
+      image?: string
+    } = {}
+    
+    if (name) updates.name = name
+    if (email) updates.email = email
+    if (avatar) updates.image = avatar
+    if (Object.keys(updates).length > 0) {
+      await updateUserInfo(user?.id, updates);
+    }
+    
+    return c.json({
+      code: 200,
+      message: 'Success'
+    })
+  } catch (e) {
+    return c.json({
+      code: 500,
+      message: 'Failed'
     })
   }
 })

@@ -16,7 +16,8 @@ export async function insertAlbums(album: AlbumType) {
       show: album.show,
       allow_download: album.allow_download,
       license: album.license,
-      del: 0
+      del: 0,
+      image_sorting: album.image_sorting,
     }
   })
 }
@@ -59,6 +60,7 @@ export async function updateAlbum(album: AlbumType) {
         allow_download: album.allow_download,
         license: album.license,
         updatedAt: new Date(),
+        image_sorting: album.image_sorting,
       }
     })
     await tx.imagesAlbumsRelation.updateMany({
@@ -149,7 +151,7 @@ export async function insertImage(image: ImageType) {
         type: image.type,
         show: 1,
         sort: image.sort,
-        del: 0
+        del: 0,
       }
     })
 
@@ -228,6 +230,7 @@ export async function updateImage(image: ImageType) {
         detail: image.detail,
         sort: image.sort,
         show: image.show,
+        show_on_mainpage: image.show_on_mainpage,
         width: image.width,
         height: image.height,
         lat: image.lat,
@@ -262,6 +265,23 @@ export async function updatePassword(userId: string, newPassword: string) {
       password: newPassword
     }
   })
+}
+export async function updateUserInfo(userId: string, updates: {
+  name?: string,
+  email?: string,
+  image?: string,
+}) {
+  const updateQuery = Object.entries(updates)
+    .filter(([_, value]) => value !== undefined)
+    .reduce((acc, [key, value]) => ({
+      ...acc,
+      [key]: value
+    }), {});
+    
+  return await db.user.update({
+    where: { id: userId },
+    data: updateQuery
+  });
 }
 
 export async function updateS3Config(configs: any) {
@@ -380,6 +400,7 @@ export async function updateCustomInfo(payload: {
   customAuthor: string
   feedId: string
   userId: string
+  customIndexStyle: number
   enablePreviewImageMaxWidthLimit?: boolean
   previewImageMaxWidth?: number
   previewQuality?: number
@@ -390,6 +411,7 @@ export async function updateCustomInfo(payload: {
     customAuthor,
     feedId,
     userId,
+    customIndexStyle,
     enablePreviewImageMaxWidthLimit,
     previewImageMaxWidth,
     previewQuality,
@@ -437,6 +459,15 @@ export async function updateCustomInfo(payload: {
       },
       data: {
         config_value: userId,
+        updatedAt: new Date()
+      }
+    })
+    await tx.configs.update({
+      where: {
+        config_key: 'custom_index_style'
+      },
+      data: {
+        config_value: customIndexStyle.toString(),
         updatedAt: new Date()
       }
     })

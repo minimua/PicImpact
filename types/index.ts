@@ -35,6 +35,7 @@ export type AlbumType = {
   sort: number;
   allow_download: number;
   license: string;
+  image_sorting: number;
 }
 
 export type ExifType = {
@@ -71,6 +72,7 @@ export type ImageType = {
   detail: string;
   type: number;
   show: number;
+  show_on_mainpage: number;
   sort: number;
   album_name: string;
   album_value: string;
