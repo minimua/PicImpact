@@ -427,6 +427,29 @@ export async function fetchAlbumsShow() {
   });
 }
 
+export async function fetchAlbumsShowOptions() {
+  const data = await db.configs.findFirst({
+    where: {
+      config_key: 'custom_fold_album_enable'
+    },
+    select: {
+      config_value: true
+    }
+  })
+  const countData = await db.configs.findFirst({
+    where: {
+      config_key: 'custom_fold_album_count'
+    },
+    select: {
+      config_value: true
+    }
+  })
+  return {
+    enabled: data?.config_value === 'true',
+    count: parseInt(countData?.config_value || '6')
+  }
+}
+
 export async function fetchImagesAnalysis() {
   const counts = await db.$queryRaw<[{ images_total: number, images_show: number, cr_total: number, tags_total: number }]>`
     SELECT 
@@ -434,6 +457,16 @@ export async function fetchImagesAnalysis() {
       (SELECT COUNT(*) FROM "public"."images" WHERE del = 0 AND show = 0) as images_show,
       (SELECT COUNT(*) FROM "public"."copyrights" WHERE del = 0) as cr_total,
       (SELECT COUNT(*) FROM "public"."albums" WHERE del = 0) as tags_total
+  `;
+
+  const cameraStats = await db.$queryRaw`
+    SELECT COUNT(*) as count, 
+      COALESCE(exif->>'model', 'Unknown') as camera,
+      COALESCE(exif->>'lens_model', 'Unknown') as lens
+    FROM "public"."images"
+    WHERE del = 0
+    GROUP BY camera, lens
+    ORDER BY count DESC
   `;
 
   const result = await db.$queryRaw`
@@ -466,6 +499,7 @@ export async function fetchImagesAnalysis() {
     showTotal: Number(counts[0].images_show),
     crTotal: Number(counts[0].cr_total),
     tagsTotal: Number(counts[0].tags_total),
+    cameraStats,
     result
   }
 }

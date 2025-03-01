@@ -65,7 +65,10 @@
     "count": "Count/Photos",
     "show": "Show/Photos",
     "zhang": "Photos",
-    "ge": "Items"
+    "ge": "Items",
+    "cameraStats": "Camera Equipment Statistics",
+    "camera": "Camera",
+    "lens": "Lens"
   },
   "Upload": {
     "simple": "Single File Upload",
@@ -138,7 +141,10 @@
     "inputMaxWidth": "Please enter the maximum width limit for preview images, a positive integer.",
     "indexStyleSelect": "Select Homepage Style",
     "indexStyleDefault": "Default Album Style",
-    "indexStyleStar": "Featured Image Style"
+    "indexStyleStar": "Featured Image Style",
+    "customIndexDownloadEnable": "Show Copy/Download Button on Homepage (Effective in Featured Mode)",
+    "customFoldAlbumEnable": "Enable Auto-fold Albums",
+    "customFoldAlbumCount": "Auto-fold Albums Count"
   },
   "Password": {
     "onePassword": "Old Password",

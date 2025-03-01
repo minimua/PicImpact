@@ -19,8 +19,11 @@ export default function Preferences() {
   const [loading, setLoading] = useState(false)
   const [customIndexStyle, setCustomIndexStyle] = useState('')
   const [previewImageMaxWidth, setPreviewImageMaxWidth] = useState('0')
+  const [customIndexDownloadEnable, setCustomIndexDownloadEnable] = useState(false)
   const [enablePreviewImageMaxWidthLimit, setPreviewImageMaxWidthLimitEnabled] = useState(false)
   const [previewQualityInput, setPreviewQualityInput] = useState('0.2')
+  const [customFoldAlbumEnable, setCustomFoldAlbumEnable] = useState(false)
+  const [customFoldAlbumCount, setCustomFoldAlbumCount] = useState('6')
   const t = useTranslations()
 
   const { data, isValidating, isLoading } = useSWR<{ config_key: string, config_value: string }[]>('/api/v1/settings/get-custom-info', fetcher)
@@ -50,9 +53,12 @@ export default function Preferences() {
           feedId: feedId,
           userId: userId,
           customIndexStyle: customIndexStyle,
+          customIndexDownloadEnable: customIndexDownloadEnable,
           enablePreviewImageMaxWidthLimit,
           previewImageMaxWidth: maxWidth,
           previewQuality,
+          customFoldAlbumEnable: customFoldAlbumEnable,
+          customFoldAlbumCount: customFoldAlbumCount,
         }),
       }).then(res => res.json())
       toast.success('修改成功！')
@@ -70,9 +76,12 @@ export default function Preferences() {
     setFeedId(data?.find((item) => item.config_key === 'rss_feed_id')?.config_value || '')
     setUserId(data?.find((item) => item.config_key === 'rss_user_id')?.config_value || '')
     setCustomIndexStyle(data?.find((item) => item.config_key === 'custom_index_style')?.config_value || '0')
+    setCustomIndexDownloadEnable(data?.find((item) => item.config_key === 'custom_index_download_enable')?.config_value.toString() === 'true' || false)
     setPreviewImageMaxWidth(data?.find((item) => item.config_key === 'preview_max_width_limit')?.config_value?.toString() || '0')
     setPreviewImageMaxWidthLimitEnabled(data?.find((item) => item.config_key === 'preview_max_width_limit_switch')?.config_value === '1')
     setPreviewQualityInput(data?.find((item) => item.config_key === 'preview_quality')?.config_value || '0.2')
+    setCustomFoldAlbumEnable(data?.find((item) => item.config_key === 'custom_fold_album_enable')?.config_value.toString() === 'true' || false)
+    setCustomFoldAlbumCount(data?.find((item) => item.config_key === 'custom_fold_album_count')?.config_value || '6')
   }, [data])
 
   return (
@@ -184,39 +193,88 @@ export default function Preferences() {
           className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
         />
       </label>
-      <div className="flex gap-4">
       <label
-        htmlFor="enableMaxWidthLimit"
+        htmlFor="customIndexDownloadEnable"
         className="w-full sm:w-64 block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
       >
-        <span className="text-xs font-medium text-gray-700">{t('Preferences.enableMaxWidthLimit')}</span>
+        <span className="text-xs font-medium text-gray-700">{t('Preferences.customIndexDownloadEnable')}</span>
         <div>
-        <Switch
-          id="enableMaxWidthLimit"
-          disabled={isValidating || isLoading}
-          checked={enablePreviewImageMaxWidthLimit}
-          onCheckedChange={checked => {
-            setPreviewImageMaxWidthLimitEnabled(checked)
-          }}
-        />
+          <Switch
+            id="customIndexDownloadEnable"
+            disabled={isValidating || isLoading}
+            checked={customIndexDownloadEnable}
+            onCheckedChange={checked => {
+              setCustomIndexDownloadEnable(checked)
+            }}
+          />
+        </div>
+      </label>
+      <div className="flex gap-4">
+        <label
+          htmlFor="enableMaxWidthLimit"
+          className="w-full sm:w-64 block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
+        >
+          <span className="text-xs font-medium text-gray-700">{t('Preferences.enableMaxWidthLimit')}</span>
+          <div>
+          <Switch
+            id="enableMaxWidthLimit"
+            disabled={isValidating || isLoading}
+            checked={enablePreviewImageMaxWidthLimit}
+            onCheckedChange={checked => {
+              setPreviewImageMaxWidthLimitEnabled(checked)
+            }}
+          />
+          </div>
+        </label>
+        <label
+          htmlFor="maxWidth"
+          className="w-full sm:w-64 block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
+        >
+          <span className="text-xs font-medium text-gray-700">{t('Preferences.maxWidth')}</span>
+          <input
+            type="text"
+            id="maxWidth"
+            disabled={isValidating || isLoading}
+            value={previewImageMaxWidth}
+            placeholder={t('Preferences.inputMaxWidth')}
+            onChange={(e) => setPreviewImageMaxWidth(e.target.value)}
+            className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
+          />
+        </label>
+      </div>
+      <label
+        htmlFor="customFoldAlbumEnable"
+        className="w-full sm:w-64 block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
+      >
+        <span className="text-xs font-medium text-gray-700">{t('Preferences.customFoldAlbumEnable')}</span>
+        <div>
+          <Switch
+            id="customFoldAlbumEnable"
+            disabled={isValidating || isLoading}
+            checked={customFoldAlbumEnable}
+            onCheckedChange={checked => {
+              setCustomFoldAlbumEnable(checked)
+            }}
+          />
         </div>
       </label>
       <label
-        htmlFor="maxWidth"
+        htmlFor="customFoldAlbumCount"
         className="w-full sm:w-64 block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
       >
-        <span className="text-xs font-medium text-gray-700">{t('Preferences.maxWidth')}</span>
+        <span className="text-xs font-medium text-gray-700">{t('Preferences.customFoldAlbumCount')}</span>
         <input
-          type="text"
-          id="maxWidth"
-          disabled={isValidating || isLoading}
-          value={previewImageMaxWidth}
-          placeholder={t('Preferences.inputMaxWidth')}
-          onChange={(e) => setPreviewImageMaxWidth(e.target.value)}
-          className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
+          type="number"
+          id="customFoldAlbumCount"
+          disabled={isValidating || isLoading || !customFoldAlbumEnable}
+          value={customFoldAlbumCount}
+          min="1"
+          onChange={(e) => setCustomFoldAlbumCount(e.target.value)}
+          className={`mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm ${
+            !customFoldAlbumEnable ? 'text-gray-500 cursor-not-allowed' : ''
+          }`}
         />
       </label>
-      </div>
       <div className="flex w-full sm:w-64 items-center justify-center space-x-1">
         <Button
           variant="outline"

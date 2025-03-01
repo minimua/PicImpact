@@ -401,6 +401,9 @@ export async function updateCustomInfo(payload: {
   feedId: string
   userId: string
   customIndexStyle: number
+  customFoldAlbumEnable: boolean
+  customFoldAlbumCount: number
+  customIndexDownloadEnable: boolean
   enablePreviewImageMaxWidthLimit?: boolean
   previewImageMaxWidth?: number
   previewQuality?: number
@@ -412,6 +415,9 @@ export async function updateCustomInfo(payload: {
     feedId,
     userId,
     customIndexStyle,
+    customFoldAlbumEnable,
+    customFoldAlbumCount,
+    customIndexDownloadEnable,
     enablePreviewImageMaxWidthLimit,
     previewImageMaxWidth,
     previewQuality,
@@ -469,6 +475,33 @@ export async function updateCustomInfo(payload: {
       data: {
         config_value: customIndexStyle.toString(),
         updatedAt: new Date()
+      }
+    })
+    await tx.configs.update({
+      where: {
+        config_key: 'custom_fold_album_enable'
+      },
+      data: {
+        config_value: customFoldAlbumEnable ? 'true' : 'false',
+        updatedAt: new Date()
+      }
+    })
+    await tx.configs.update({
+      where: {
+        config_key: 'custom_fold_album_count'
+      },
+      data: {
+        config_value: customFoldAlbumCount.toString(),
+        updatedAt: new Date()
+      }
+    })
+    await tx.configs.update({
+      where: {
+        config_key: 'custom_index_download_enable'
+      },
+      data: {
+        config_value: customIndexDownloadEnable ? 'true' : 'false',
+        updatedAt: new Date(),
       }
     })
     if (typeof enablePreviewImageMaxWidthLimit === 'boolean') {
